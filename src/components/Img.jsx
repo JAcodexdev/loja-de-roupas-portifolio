@@ -1,22 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { img } from '../data/products'
 
-/**
- * Imagem com skeleton de carregamento e cadeia de fallback:
- * tenta cada id em `ids`; se todos falharem, mostra um painel da marca
- * (nunca uma imagem quebrada).
- */
-export default function Img({ ids, alt, width = 1200, className = '', eager = false, label }) {
-  const list = Array.isArray(ids) ? ids : [ids]
+function ImgContent({ list, alt, width, className, eager, label }) {
   const [index, setIndex] = useState(0)
   const [loaded, setLoaded] = useState(false)
 
-  useEffect(() => {
-    setIndex(0)
-    setLoaded(false)
-  }, [list.join('|')])
-
   const failed = index >= list.length
+
+  const handleError = () => {
+    setLoaded(false)
+    setIndex((current) => current + 1)
+  }
 
   return (
     <div className={`img-wrap ${loaded || failed ? 'is-loaded' : ''} ${className}`}>
@@ -35,9 +29,32 @@ export default function Img({ ids, alt, width = 1200, className = '', eager = fa
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           onLoad={() => setLoaded(true)}
-          onError={() => setIndex((i) => i + 1)}
+          onError={handleError}
         />
       )}
     </div>
+  )
+}
+
+export default function Img({
+  ids,
+  alt,
+  width = 1200,
+  className = '',
+  eager = false,
+  label,
+}) {
+  const list = (Array.isArray(ids) ? ids : [ids]).filter(Boolean)
+
+  return (
+    <ImgContent
+      key={JSON.stringify(list)}
+      list={list}
+      alt={alt}
+      width={width}
+      className={className}
+      eager={eager}
+      label={label}
+    />
   )
 }
